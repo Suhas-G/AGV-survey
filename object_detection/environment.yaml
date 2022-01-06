@@ -1,0 +1,17 @@
+name: zed
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - opencv
+  - numpy
+  - pyopengl
+  - cython
+  - cudatoolkit=11.3
+  - torchaudio
+  - torchvision
+  - pytorch
+  - yacs
+  - matplotlib
+  - pip:
+    - mediapipe
