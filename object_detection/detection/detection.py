@@ -6,6 +6,16 @@ mpd = mp.solutions.drawing_utils
 mpo = mp.solutions.objectron
 
 
+class CameraIntrinsic:
+    def __init__(self, width, height, fx, fy, ppx, ppy) -> None:
+        self.width = width
+        self.height = height
+        self.fx = fx
+        self.fy = fy
+        self.ppx = ppx
+        self.ppy = ppy
+
+
 class Detection(ABC):
     def __init__(self) -> None:
         super().__init__()
@@ -19,23 +29,30 @@ class Detection(ABC):
         pass
 
 class MediaPipeDetection(Detection):
-    def __init__(self) -> None:
+    def __init__(self, camera_intrinsic: CameraIntrinsic) -> None:
         super().__init__()
+        self.camera_intrinsic = camera_intrinsic
         self.objectrons = [mpo.Objectron(static_image_mode=False,
                                 max_num_objects=2,
                                 min_detection_confidence=0.4,
                                 min_tracking_confidence=0.95,
-                                model_name='Shoe'),
-                            mpo.Objectron(static_image_mode=False,
-                                max_num_objects=2,
-                                min_detection_confidence=0.4,
-                                min_tracking_confidence=0.95,
-                                model_name='Chair'),
-                            mpo.Objectron(static_image_mode=False,
-                                max_num_objects=2,
-                                min_detection_confidence=0.4,
-                                min_tracking_confidence=0.95,
-                                model_name='Cup')
+                                model_name='Shoe',
+                                focal_length=(self.camera_intrinsic.fx, self.camera_intrinsic.fy),
+                                principal_point=(self.camera_intrinsic.ppx, self.camera_intrinsic.ppy),
+                                image_size=(self.camera_intrinsic.width, self.camera_intrinsic.height)
+                                ),
+                            # mpo.Objectron(static_image_mode=False,
+                            #     max_num_objects=2,
+                            #     min_detection_confidence=0.4,
+                            #     min_tracking_confidence=0.95,
+                            #     model_name='Chair'
+                            #     ),
+                            # mpo.Objectron(static_image_mode=False,
+                            #     max_num_objects=2,
+                            #     min_detection_confidence=0.4,
+                            #     min_tracking_confidence=0.95,
+                            #     model_name='Cup'
+                            #     )
                             ]
 
     def process(self, image: npt.NDArray, depth: npt.NDArray):
@@ -60,7 +77,20 @@ class MediaPipeDetection(Detection):
                     image, detected_object.landmarks_2d, mpo.BOX_CONNECTIONS)
                     mpd.draw_axis(image, detected_object.rotation,
                                         detected_object.translation)
-        return cv2.flip(image, 1)
+        return image #cv2.flip(image, 1)
+
+    def get_pixel_coordinates(self, results):
+        objects = []
+        for result in results:
+            if result.detected_objects:
+                for detected_object in result.detected_objects:
+                    pixels = []
+                    for landmark in detected_object.landmarks_2d.landmark:
+                        x_pixel = landmark.x * self.camera_intrinsic.width
+                        y_pixel = landmark.y * self.camera_intrinsic.height
+                        pixels.append((x_pixel, y_pixel))
+                    objects.append(pixels)
+        return objects
 
 
     def __del__(self):
