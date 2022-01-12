@@ -2,14 +2,14 @@ import json
 import uuid
 from datetime import datetime, timedelta, timezone
 
+
 from confluent_kafka import SerializingProducer
 from confluent_kafka.schema_registry import SchemaRegistryClient
 from confluent_kafka.schema_registry.avro import AvroSerializer
 
-from .avro_obj.point3d import Point3d
-from .avro_obj.pose3d import Pose3d
-from .avro_obj.quaternion import Quaternion
-from .config import BOOTSTRAP_SERVERS, SCHEMA_REGISTRY_URL
+
+from .avro_obj.ObjectPose3D import ObjectPose3D
+from .config import BOOTSTRAP_SERVERS, SCHEMA_REGISTRY_URL, SCHEMA_FILE, OBJECTPOSE_TOPIC
 
 
 
@@ -39,11 +39,11 @@ def get_pose3d_producer(schema_filepath, schema_registry_client):
     return producer
 
 
-def send_pose3d(object_pose: Pose3d, producer: SerializingProducer):
-    topic = 'ObjectPose'
+def send_pose3d(object_pose: ObjectPose3D, producer: SerializingProducer):
+    topic = OBJECTPOSE_TOPIC
     
     key = int((datetime.now(timezone.utc) + timedelta(days=3)).timestamp() * 1e3)
-    value = object_pose.avro()
+    value = object_pose.dict()
     
     try:
         producer.produce(topic=topic, key=key, value=value, on_delivery=acknowledged)
@@ -69,25 +69,7 @@ def get_producer():
 
     schema_registry_client = SchemaRegistryClient(schema_registry_conf)
 
-    producer = get_pose3d_producer('/home/agvsurvey/agv/agv-survey/object_detection/publisher/schemas/schema-ObjectPose-value-v2.avsc', schema_registry_client)
+    producer = get_pose3d_producer(SCHEMA_FILE, schema_registry_client)
 
     return producer
 
-def main():
-    
-    producer = get_producer()
-
-    while True:
-        object_id = int(input('Provide Object ID: '))
-        position = map(float, input('Provide position of object in form (x, y, z): ').split(' '))
-        orientation = map(float, input('Provide orientation of object in form (x, y, z, w): ').split(' '))
-
-        object_pose = Pose3d(0, object_id, Point3d(*position), Quaternion(*orientation))
-        send_pose3d(object_pose, producer)
-
-        input()
-
-
-
-if __name__ == '__main__':
-    main()

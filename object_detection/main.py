@@ -4,15 +4,24 @@ from view.camera import RealSenseCamera
 import numpy as np
 
 from publisher.producer import get_producer, send_pose3d
-from publisher.avro_obj.pose3d import Pose3d
-from publisher.avro_obj.point3d import Point3d
-from publisher.avro_obj.rotation import Rotation
+from publisher.avro_obj.AGVPoint3D import AGVPoint3D
+from publisher.avro_obj.ObjectPose3D import ObjectPose3D
+from publisher.avro_obj.AGVMatrix3x3 import AGVMatrix3x3
 
 
 
-def get_least_2d_bounding_box(points):
-    # Assumes format in https://github.com/google-research-datasets/Objectron/blob/master/notebooks/Parse%20Annotations.ipynb
-    top_left = max(points)
+def get_point3d(x, y, z) -> AGVPoint3D:
+    return AGVPoint3D({'x': float(x), 'y': float(y), 'z': float(z)})
+
+def get_rotation(rotation_matrix) -> AGVMatrix3x3:
+    data = {}
+    for i in range(len(rotation_matrix)):
+        for j in range(len(rotation_matrix[i])):
+            data['m{}{}'.format(i, j)] = float(rotation_matrix[i, j])
+    return AGVMatrix3x3(data)
+
+def get_object_pose(position, rotation) -> ObjectPose3D:
+    return ObjectPose3D({'position': position, 'rotation': rotation, 'RefFrameID': '0', 'ObjectID': '0'})
 
 def get_bounding_box_xywh(center, delta):
     return (center[0] - delta, center[1] - delta, 2 * delta, 2 * delta)
@@ -49,10 +58,11 @@ def main():
                         cv2.putText(output, str(x), (center[0] + 20, center[1] + 40), cv2.FONT_HERSHEY_SCRIPT_COMPLEX, 0.5, (255,255,255))
                         cv2.putText(output, str(y), (center[0] + 20, center[1] + 60), cv2.FONT_HERSHEY_SCRIPT_COMPLEX, 0.5, (255,255,255))
 
-
-                        object_pose = Pose3d(0, 1, Point3d(x, y, depth_val), Rotation(rotation))
-                        print(object_pose.avro())
-                        # send_pose3d(object_pose, producer)
+                        position = get_point3d(x, y, depth_val)
+                        rotation = get_rotation(rotation)
+                        object_pose = get_object_pose(position, rotation)
+                        # print(object_pose.serialize())
+                        send_pose3d(object_pose, producer)
                         
             cv2.imshow('MediaPipe Objectron', cv2.cvtColor(output, cv2.COLOR_RGB2BGR))
             # cv2.imshow('Stream', np.hstack((image, depth)))
