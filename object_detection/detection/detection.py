@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-import numpy.typing as npt
+# import numpy.typing as npt
 import mediapipe as mp
 import cv2
 mpd = mp.solutions.drawing_utils
@@ -21,7 +21,7 @@ class Detection(ABC):
         super().__init__()
 
     @abstractmethod
-    def process(self, image: npt.NDArray, depth: npt.NDArray):
+    def process(self, image, depth):
         pass
 
     @abstractmethod
@@ -55,7 +55,7 @@ class MediaPipeDetection(Detection):
                             #     )
                             ]
 
-    def process(self, image: npt.NDArray, depth: npt.NDArray):
+    def process(self, image, depth):
         image.flags.writeable = False
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         results = []
@@ -68,7 +68,7 @@ class MediaPipeDetection(Detection):
         return results
 
 
-    def draw_boxes(self, results, image) -> npt.NDArray:
+    def draw_boxes(self, results, image):
         for result in results:
             if result.detected_objects:
                 
@@ -81,6 +81,7 @@ class MediaPipeDetection(Detection):
 
     def get_pixel_coordinates(self, results):
         objects = []
+        rotations = []
         for result in results:
             if result.detected_objects:
                 for detected_object in result.detected_objects:
@@ -90,7 +91,8 @@ class MediaPipeDetection(Detection):
                         y_pixel = landmark.y * self.camera_intrinsic.height
                         pixels.append((x_pixel, y_pixel))
                     objects.append(pixels)
-        return objects
+                    rotations.append(detected_object.rotation)
+        return objects, rotations
 
 
     def __del__(self):
