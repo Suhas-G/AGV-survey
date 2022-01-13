@@ -16,8 +16,15 @@ from .config import BOOTSTRAP_SERVERS, SCHEMA_REGISTRY_URL, SCHEMA_FILE, OBJECTP
 def get_pose3d_producer(schema_filepath, schema_registry_client):
     key_schema_string = '''
     {
-        "logicalType": "timestamp-millis",
-        "type": "long"
+        "type": "record",
+        "name": "SimpleKey",
+        "namespace": "de.dfki.cos.mrk40.avro",
+        "fields": [
+            {
+                "name": "key",
+                "type": "string"
+            }
+        ]
     }
     '''
 
@@ -42,7 +49,7 @@ def get_pose3d_producer(schema_filepath, schema_registry_client):
 def send_pose3d(object_pose: ObjectPose3D, producer: SerializingProducer):
     topic = OBJECTPOSE_TOPIC
     
-    key = int((datetime.now(timezone.utc) + timedelta(days=3)).timestamp() * 1e3)
+    key = {'key': 'myKey'} # str(uuid.uuid4())
     value = object_pose.dict()
     
     try:
