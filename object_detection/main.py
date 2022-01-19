@@ -45,6 +45,8 @@ def main():
                 
                 for i, coordinate in enumerate(object_coordinates):
                     center = tuple(map(int, coordinate))
+                    if (center[0] > image.shape[0] or center[1] > image.shape[1]):
+                        continue
                     cv2.circle(output, center, 3, [255, 255, 0], -1)
                     if i == 0:
                         rect = get_bounding_box_xywh(center, 10)
