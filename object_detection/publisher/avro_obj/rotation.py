@@ -11,4 +11,4 @@ class Rotation:
         self.m22 = rotation[0, 2]
 
     def avro(self):
-        return {key: self.__dict__[key] if key[0] == 'm'}
+        return {key: self.__dict__[key] for key in self.__dict__ if key[0] == 'm'}
