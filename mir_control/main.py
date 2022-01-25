@@ -1,49 +1,82 @@
 from time import time
+from enum import Enum
+import uuid
 import roslibpy
 
 import mirrosbridge as mb
 
-from .config import MIR_ROS_HOST, MIR_ROS_PORT, MOVE_BASE_GOAL_TOPIC, MOVE_BASE_RESULT_TOPIC
+from .config import MIR_ROS_HOST, MIR_ROS_PORT
 
 from collections import deque
+
+
+class GoalStatus(Enum):
+    PENDING         = 0   # The goal has yet to be processed by the action server
+    ACTIVE          = 1   # The goal is currently being processed by the action server
+    PREEMPTED       = 2   # The goal received a cancel request after it started executing
+                                #   and has since completed its execution (Terminal State)
+    SUCCEEDED       = 3   # The goal was achieved successfully by the action server (Terminal State)
+    ABORTED         = 4   # The goal was aborted during execution by the action server due
+                                #    to some failure (Terminal State)
+    REJECTED        = 5   # The goal was rejected by the action server without being processed,
+                                #    because the goal was unattainable or invalid (Terminal State)
+    PREEMPTING      = 6   # The goal received a cancel request after it started executing
+                                #    and has not yet completed execution
+    RECALLING       = 7   # The goal received a cancel request before it started executing,
+                                #    but the action server has not yet confirmed that the goal is canceled
+    RECALLED        = 8   # The goal received a cancel request before it started executing
+                                #    and was successfully cancelled (Terminal State)
+    LOST            = 9   # An action client can determine that a goal is LOST. This should not be
+                                #    sent over the wire by an action server
 
 class MirPathPlanner:
     def __init__(self, goals) -> None:
         self.connection = mb.MirRosBridge(MIR_ROS_HOST, MIR_ROS_PORT)
-        self.pose_publisher = self.connection.get_publisher_to_topic(MOVE_BASE_GOAL_TOPIC, 
-                                                                    'geometry_msgs/PoseStamped')
+        self.pose_action = self.connection.get_action_client('move_base', 'move_base_msgs/MoveBaseAction')
 
         self.goals = deque(goals)
 
     def start(self):
-        self.connection.subscribe_to_topic(MOVE_BASE_RESULT_TOPIC, 'move_base_msgs/MoveBaseActionResult', 
-                                            self.goal_status_update)
         self.publish_goal()
 
     def publish_goal(self):
-        goal = self.goals.pop()
+        goal_data = self.goals.pop()
+        now = roslibpy.Time.now()
         message = roslibpy.Message({
             'header': {
-                'stamp': int(time() * 1000),
+                'stamp': {'secs': now.secs, 'nsecs': now.nsecs},
                 'frame_id': 'map'
             },
-            'pose': {
-                'position': {'x': goal[0], 'y': goal[1]}
+            'goal_id': {
+                'stamp': {'secs': now.secs, 'nsecs': now.nsecs},
+                'id': str(uuid.uuid4())
+            },
+            'goal': {
+                'target_pose': {
+                    'header': {
+                        'stamp': {'secs': now.secs, 'nsecs': now.nsecs},
+                    },
+                    'pose': {
+                        'position': {'x': goal_data[0], 'y': goal_data[1], 'z': 0.0},
+                        'orientation': {'x': 0.0, 'y': 0.0, 'z': 0.0, 'w': 1.0}
+                    }
+                },
             }
         })
-
-        self.pose_publisher.publish(message)
-        print('Published goal:', goal[0], goal[1]) 
+        self.goal = roslibpy.actionlib.Goal(self.pose_action, message)
+        self.goal.send(self.goal_status_update)
+        print('Published goal:', goal_data[0], goal_data[1]) 
 
     def goal_status_update(self, data):
         if isinstance(data, dict):
-            if data.get('status', {}).get('status', -1) == 3:
+            if data.get('status', {}).get('status', -1) == GoalStatus.SUCCEEDED.value:
                 print('Goal reached:', data)
 
                 if len(self.goals) > 0:
                     self.publish_goal()
                 else:
-                    self.pose_publisher.unadvertise()
+                    self.pose_action.cancel()
+                    self.pose_action.dispose()
                     self.connection.close_bridge()
             else:
                 print('Goal not reached:', data)

@@ -176,6 +176,9 @@ class MirRosBridge:
     def get_publisher_to_topic(self, topic, message_type, **kwargs):
         return roslibpy.Topic(self.client, topic, message_type, **kwargs)
 
+    def get_action_client(self, server_name, action_name, **kwargs):
+        return roslibpy.actionlib.ActionClient(self.client, server_name, action_name, **kwargs)
+
     def get_topics(self):
         return self.client.get_topics()
 
