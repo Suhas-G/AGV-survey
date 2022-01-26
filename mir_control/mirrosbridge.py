@@ -5,7 +5,7 @@ import threading
 import requests
 import re
 
-from .config import MIR_WEB_SESSION_USERNAME, MIR_WEB_SESSION_PASSWORD
+from config import MIR_WEB_SESSION_USERNAME, MIR_WEB_SESSION_PASSWORD
 
 
 class MirRosBridge:
