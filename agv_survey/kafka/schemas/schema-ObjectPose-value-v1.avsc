@@ -1,0 +1,74 @@
+{
+  "doc": "3d Pose of Object",
+  "fields": [
+    {
+      "doc": "The co-ordinate frame used",
+      "name": "coord_ref",
+      "type": "int"
+    },
+    {
+      "doc": "ID of the object",
+      "name": "object_id",
+      "type": "int"
+    },
+    {
+      "doc": "Position of object in 3d space",
+      "name": "position",
+      "type": {
+        "doc": "3d position",
+        "fields": [
+          {
+            "doc": "X co-ordinate in 3d",
+            "name": "x",
+            "type": "float"
+          },
+          {
+            "doc": "Y co-ordinate in 3d",
+            "name": "y",
+            "type": "float"
+          },
+          {
+            "doc": "Z co-ordinate in 3d",
+            "name": "z",
+            "type": "float"
+          }
+        ],
+        "name": "Point3d",
+        "type": "record"
+      }
+    },
+    {
+      "name": "orientation",
+      "type": {
+        "doc": "Orientation in 3d space",
+        "fields": [
+          {
+            "doc": "Rotation about X",
+            "name": "x",
+            "type": "float"
+          },
+          {
+            "doc": "Rotation about Y",
+            "name": "y",
+            "type": "float"
+          },
+          {
+            "doc": "Rotation about Z",
+            "name": "z",
+            "type": "float"
+          },
+          {
+            "doc": "acos of Rotation angle",
+            "name": "w",
+            "type": "float"
+          }
+        ],
+        "name": "Quaternion",
+        "type": "record"
+      }
+    }
+  ],
+  "name": "Pose3d",
+  "namespace": "agvsurvey.records",
+  "type": "record"
+}

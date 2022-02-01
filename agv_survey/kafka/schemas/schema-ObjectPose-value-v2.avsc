@@ -1,0 +1,51 @@
+{
+  "doc": "3d Pose of Object",
+  "fields": [
+    {
+      "doc": "The co-ordinate frame used",
+      "name": "coord_ref",
+      "type": "int"
+    },
+    {
+      "doc": "ID of the object",
+      "name": "object_id",
+      "type": "int"
+    },
+    {
+      "doc": "Position of object in 3d space",
+      "name": "position",
+      "type": {
+        "doc": "3d position",
+        "fields": [
+          {
+            "doc": "X co-ordinate in 3d",
+            "name": "x",
+            "type": "float"
+          },
+          {
+            "doc": "Y co-ordinate in 3d",
+            "name": "y",
+            "type": "float"
+          },
+          {
+            "doc": "Z co-ordinate in 3d",
+            "name": "z",
+            "type": "float"
+          }
+        ],
+        "name": "Point3d",
+        "type": "record"
+      }
+    },
+    {
+      "name": "rotation",
+      "type": {
+        "items": "float",
+        "type": "array"
+      }
+    }
+  ],
+  "name": "Pose3d",
+  "namespace": "agvsurvey.records",
+  "type": "record"
+}
