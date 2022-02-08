@@ -16,6 +16,7 @@ class MirStatus(Enum):
     FAILED = 'failed'
     PENDING =  'pending'
     EXECUTING = 'executing'
+    SUCCEEDED = 'succeeded'
 
 
 class MirRestApi:
@@ -135,14 +136,14 @@ class MirRestApi:
         if self.mission_queue_id is None:
             return MirStatus.UNKNOWN
         res = self.session.get(self.base_url + 'mission_queue/' + self.mission_queue_id)
-        return res.json()['state'] if res.ok else MirStatus.UNKNOWN
+        return MirStatus(res.json()['state'].lower()) if res.ok else MirStatus.UNKNOWN
 
     def get_action_status(self, action_id):
         if self.mission_queue_id is None:
             return MirStatus.UNKNOWN
         res = self.session.get(self.base_url + 'mission_queue/' + self.mission_queue_id + 
                                 'actions/' + action_id)
-        return res.json()['state'] if res.ok else MirStatus.UNKNOWN
+        return MirStatus(res.json()['state'].lower()) if res.ok else MirStatus.UNKNOWN
 
     def get_robot_status(self):
         res = self.session.get(self.base_url + 'status')

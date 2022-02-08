@@ -20,7 +20,7 @@ class MirController:
 
 
     def monitor(self):
-        if self.api.get_mission_status() == MirStatus.COMPLETED:
+        if self.api.get_mission_status() == MirStatus.SUCCEEDED:
             self.stop()
         
         successful, result = self.api.get_robot_status()
@@ -35,7 +35,7 @@ class MirController:
 
         actions = self.api.get_mission_actions()
         for i, action in enumerate(actions):
-            action_state = MirStatus(action['state'])
+            action_state = MirStatus(action['state'].lower())
             action_data = {}
             for parameter in action['parameters']:
                 if parameter['id'] in ('x', 'y', 'orientation'):
@@ -45,10 +45,10 @@ class MirController:
             assert (math.isclose(self.goals[i]['position']['y'], action_data['y'], rel_tol=0.05))
             assert (math.isclose(self.goals[i]['orientation'], action_data['orientation'], rel_tol=0.05))
 
-            if action_state == MirStatus.COMPLETED:
-                self.goals[i]['status'] = MirStatus.COMPLETED
+            if action_state == MirStatus.SUCCEEDED:
+                self.goals[i]['status'] = MirStatus.SUCCEEDED
 
-            if action_state == MirStatus.EXECUTING and action['action_type'] == 'move_to_position':
+            if action_state == MirStatus.PENDING and action['action_type'] == 'move_to_position':
                 self.data_lock.acquire()
                 self.data['current_goal'] = {}
                 self.data['current_goal']['position'] = {'x': action_data['x'], 'y': action_data['y']}
