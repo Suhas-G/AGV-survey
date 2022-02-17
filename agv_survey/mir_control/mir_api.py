@@ -3,7 +3,7 @@ from uuid import uuid4
 
 import requests
 
-from config import (MIR_ACTION_TYPE, MIR_AUTHORIZATION_CODE,
+from .config import (MIR_ACTION_TYPE, MIR_AUTHORIZATION_CODE,
                     MIR_MISSION_GROUP_ID, MIR_MISSION_NAME, MIR_ROS_HOST)
 
 
@@ -16,7 +16,8 @@ class MirStatus(Enum):
     FAILED = 'failed'
     PENDING =  'pending'
     EXECUTING = 'executing'
-    SUCCEEDED = 'succeeded'
+    SUCCEDED = 'succeded'
+    DONE = 'done'
 
 
 class MirRestApi:
@@ -42,7 +43,6 @@ class MirRestApi:
                                 ]
                             }
         )
-        print(res.json())
 
     def add_mission(self, mission_name, mission_description):
         guid = uuid4()
@@ -54,7 +54,6 @@ class MirRestApi:
                                     'description': mission_description,
                                 }
                             )
-        print(res.json())
         return (str(guid) if res.ok else None)
 
     def get_missions(self):
@@ -113,7 +112,7 @@ class MirRestApi:
         res = self.session.post(self.base_url + 'mission_queue', 
                                 json={'mission_id': self.mission_id})
         if res.ok:
-            self.mission_queue_id = res.json()['id']
+            self.mission_queue_id = str(res.json()['id'])
         return res.ok, res.json()
 
     def cancel_mission(self):
@@ -138,12 +137,12 @@ class MirRestApi:
         res = self.session.get(self.base_url + 'mission_queue/' + self.mission_queue_id)
         return MirStatus(res.json()['state'].lower()) if res.ok else MirStatus.UNKNOWN
 
-    def get_action_status(self, action_id):
+    def get_action_details(self, action_id):
         if self.mission_queue_id is None:
-            return MirStatus.UNKNOWN
+            return None
         res = self.session.get(self.base_url + 'mission_queue/' + self.mission_queue_id + 
-                                'actions/' + action_id)
-        return MirStatus(res.json()['state'].lower()) if res.ok else MirStatus.UNKNOWN
+                                '/actions/' + action_id)
+        return res.json() if res.ok else None
 
     def get_robot_status(self):
         res = self.session.get(self.base_url + 'status')

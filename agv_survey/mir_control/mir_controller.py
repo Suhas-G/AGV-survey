@@ -4,7 +4,8 @@ from time import time
 from typing import List
 import numpy as np
 
-from mir_api import MirRestApi, MirStatus
+from .mir_api import MirRestApi, MirStatus
+from copy import deepcopy
 
 
 class MirController:
@@ -20,9 +21,9 @@ class MirController:
 
 
     def monitor(self):
-        if self.api.get_mission_status() == MirStatus.SUCCEEDED:
+        if self.api.get_mission_status() == MirStatus.DONE:
             self.stop()
-        
+
         successful, result = self.api.get_robot_status()
         if not successful:
             return
@@ -34,27 +35,38 @@ class MirController:
 
 
         actions = self.api.get_mission_actions()
+        index = 0
         for i, action in enumerate(actions):
+            action = self.api.get_action_details(str(action['id']))
             action_state = MirStatus(action['state'].lower())
             action_data = {}
-            for parameter in action['parameters']:
-                if parameter['id'] in ('x', 'y', 'orientation'):
-                    action_data[parameter['id']] = parameter['value']
 
-            assert (math.isclose(self.goals[i]['position']['x'], action_data['x'], rel_tol=0.05))
-            assert (math.isclose(self.goals[i]['position']['y'], action_data['y'], rel_tol=0.05))
-            assert (math.isclose(self.goals[i]['orientation'], action_data['orientation'], rel_tol=0.05))
+            if action['action_type'] != 'move_to_position':
+                continue
 
-            if action_state == MirStatus.SUCCEEDED:
-                self.goals[i]['status'] = MirStatus.SUCCEEDED
+            for parameter in ('x', 'y', 'orientation'):
+                action_data[parameter] = action['parameters'][parameter]
 
-            if action_state == MirStatus.PENDING and action['action_type'] == 'move_to_position':
+            assert (math.isclose(self.goals[index]['position']['x'], action_data['x'], rel_tol=0.05))
+            assert (math.isclose(self.goals[index]['position']['y'], action_data['y'], rel_tol=0.05))
+            assert (math.isclose(self.goals[index]['orientation'], action_data['orientation'], rel_tol=0.05))
+
+            if action_state == MirStatus.SUCCEDED:
+                self.goals[index]['status'] = MirStatus.SUCCEDED
+
+            if action_state == MirStatus.EXECUTING:
                 self.data_lock.acquire()
                 self.data['current_goal'] = {}
                 self.data['current_goal']['position'] = {'x': action_data['x'], 'y': action_data['y']}
                 self.data['current_goal']['orientation'] = action_data['orientation']
                 self.data['current_goal']['goal_index'] = i
                 self.data_lock.release()
+
+            index += 1
+
+        if self.is_running:
+            self._timer = threading.Timer(interval=self.interval, function=self.monitor)
+            self._timer.start()
 
     def start(self):
         if not self.is_running:
@@ -68,6 +80,7 @@ class MirController:
             self.is_running = True
 
     def cancel(self):
+        print('Cancelling')
         successful = self.api.cancel_mission()
         if successful:
             self.stop()
@@ -75,6 +88,7 @@ class MirController:
         return successful
 
     def stop(self):
+        print('Stopping')
         if self.is_running:
             self._timer.cancel()
             self.is_running = False
@@ -94,3 +108,9 @@ class MirController:
             ])
         self.data_lock.release()
         return pose
+
+    def get_data(self):
+        self.data_lock.acquire()
+        data = deepcopy(self.data)
+        self.data_lock.release()
+        return data

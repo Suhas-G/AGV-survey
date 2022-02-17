@@ -4,13 +4,14 @@ from mir_control.mir_controller import MirController
 
 def main():
     controller = MirController([
-                {'position': {'x': 10.426, 'y': 7.042}, 'orientation': -176.427},
-                {'position': {'x': 4.804, 'y': 7.636}, 'orientation': -38.781}
+                {'position': {'x': 11.050, 'y': 9.450}, 'orientation': 180},
+                {'position': {'x': 7.239, 'y': 8.150}, 'orientation': 0}
         ])
 
     while True:
         sleep(1)
-        print(controller.get_data())
+        # controller.get_data()
+        print('Data: ', controller.get_data())
 
 if __name__ == '__main__':
     main()
