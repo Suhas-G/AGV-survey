@@ -1,0 +1,3 @@
+[submodule "agv_survey\\CenterPose"]
+	path = agv_survey\\CenterPose
+	url = https://github.com/NVlabs/CenterPose.git

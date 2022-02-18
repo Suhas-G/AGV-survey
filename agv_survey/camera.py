@@ -5,13 +5,12 @@ import pyrealsense2 as rs
 
 
 class RealSenseCamera:
-    def __init__(self, simulate=False) -> None:
-        super().__init__(simulate=simulate)
+    def __init__(self, simulate=False, filepath=None) -> None:
         self.pipeline = rs.pipeline()
         cfg = rs.config()
         
-        if simulate:
-            cfg.enable_device_from_file("shoe.bag")
+        if simulate and filepath is not None:
+            cfg.enable_device_from_file(filepath)
         self.profile = self.pipeline.start(cfg)
        
         self.align = rs.align(rs.stream.color)
