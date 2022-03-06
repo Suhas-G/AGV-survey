@@ -3,10 +3,10 @@
 """ avro python class for file: ObjectPose3D """
 
 import json
-from helpers import default_json_serialize, todict
+from .helpers import default_json_serialize, todict
 from typing import Union
-from AGVPoint3D import AGVPoint3D
-from AGVMatrix3x3 import AGVMatrix3x3
+from .AGVPoint3D import AGVPoint3D
+from .AGVMatrix3x3 import AGVMatrix3x3
 
 
 class ObjectPose3D(object):

@@ -3,7 +3,7 @@
 """ avro python class for file: SimpleKey """
 
 import json
-from helpers import default_json_serialize, todict
+from .helpers import default_json_serialize, todict
 from typing import Union
 
 

@@ -17,6 +17,9 @@ class CameraIntrinsic:
         self.ppx = ppx
         self.ppy = ppy
 
+    def __str__(self) -> str:
+        return str(self.__dict__)
+
 
 
 

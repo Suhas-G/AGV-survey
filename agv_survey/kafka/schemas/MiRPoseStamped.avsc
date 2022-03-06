@@ -1,0 +1,67 @@
+{
+  "type" : "record",
+  "name" : "MiRPoseStamped",
+  "namespace" : "de.dfki.cos.mrk40.avro",
+  "fields" : [ {
+    "name" : "refFrameId",
+    "type" : "string"
+  }, {
+    "name" : "pose",
+    "type" : {
+      "type" : "record",
+      "name" : "Pose3d",
+      "fields" : [ {
+        "name" : "position",
+        "type" : {
+          "type" : "record",
+          "name" : "Point3d",
+          "fields" : [ {
+            "name" : "x",
+            "type" : "float"
+          }, {
+            "name" : "y",
+            "type" : "float"
+          }, {
+            "name" : "z",
+            "type" : "float"
+          } ],
+          "aliases" : [ "Position3d" ]
+        }
+      }, {
+        "name" : "orientation",
+        "type" : {
+          "type" : "record",
+          "name" : "Quaternion",
+          "fields" : [ {
+            "name" : "x",
+            "type" : "float"
+          }, {
+            "name" : "y",
+            "type" : "float"
+          }, {
+            "name" : "z",
+            "type" : "float"
+          }, {
+            "name" : "w",
+            "type" : "float"
+          } ],
+          "aliases" : [ "Rotation3d", "Orientation3d" ]
+        }
+      } ]
+    }
+  }, {
+    "name" : "timestamp",
+    "type" : {
+      "type" : "record",
+      "name" : "TimestampUnix",
+      "fields" : [ {
+        "name" : "seconds",
+        "type" : "long"
+      }, {
+        "name" : "nseconds",
+        "type" : "int",
+        "default" : 0
+      } ]
+    }
+  } ]
+}

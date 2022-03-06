@@ -3,7 +3,7 @@
 """ avro python class for file: AGVMatrix3x3 """
 
 import json
-from helpers import default_json_serialize, todict
+from .helpers import default_json_serialize, todict
 from typing import Union
 
 

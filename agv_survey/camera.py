@@ -6,7 +6,7 @@ import pyrealsense2 as rs
 
 class RealSenseCamera:
     def __init__(self, simulate=False) -> None:
-        super().__init__(simulate=simulate)
+        super().__init__()
         self.pipeline = rs.pipeline()
         cfg = rs.config()
         

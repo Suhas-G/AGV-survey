@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
 
-""" avro python class for file: AGVPoint3D """
+""" avro python class for file: Point3d """
 
 import json
 from .helpers import default_json_serialize, todict
 from typing import Union
 
 
-class AGVPoint3D(object):
+class Point3d(object):
 
     schema = """
     {
         "type": "record",
-        "name": "AGVPoint3D",
+        "name": "Point3d",
         "fields": [
             {
                 "name": "x",
@@ -30,11 +30,11 @@ class AGVPoint3D(object):
         "aliases": [
             "Position3d"
         ],
-        "namespace": "agvsurvey.avro"
+        "namespace": "de.dfki.cos.mrk40.avro"
     }
     """
 
-    def __init__(self, obj: Union[str, dict, 'AGVPoint3D']) -> None:
+    def __init__(self, obj: Union[str, dict, 'Point3d']) -> None:
         if isinstance(obj, str):
             obj = json.loads(obj)
 
@@ -43,7 +43,7 @@ class AGVPoint3D(object):
 
         elif not isinstance(obj, dict):
             raise TypeError(
-                f"{type(obj)} is not in ('str', 'dict', 'AGVPoint3D')"
+                f"{type(obj)} is not in ('str', 'dict', 'Point3d')"
             )
 
         self.set_x(obj.get('x', None))

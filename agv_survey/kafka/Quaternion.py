@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
 
-""" avro python class for file: AGVPoint3D """
+""" avro python class for file: Quaternion """
 
 import json
 from .helpers import default_json_serialize, todict
 from typing import Union
 
 
-class AGVPoint3D(object):
+class Quaternion(object):
 
     schema = """
     {
         "type": "record",
-        "name": "AGVPoint3D",
+        "name": "Quaternion",
         "fields": [
             {
                 "name": "x",
@@ -25,16 +25,21 @@ class AGVPoint3D(object):
             {
                 "name": "z",
                 "type": "float"
+            },
+            {
+                "name": "w",
+                "type": "float"
             }
         ],
         "aliases": [
-            "Position3d"
+            "Rotation3d",
+            "Orientation3d"
         ],
-        "namespace": "agvsurvey.avro"
+        "namespace": "de.dfki.cos.mrk40.avro"
     }
     """
 
-    def __init__(self, obj: Union[str, dict, 'AGVPoint3D']) -> None:
+    def __init__(self, obj: Union[str, dict, 'Quaternion']) -> None:
         if isinstance(obj, str):
             obj = json.loads(obj)
 
@@ -43,7 +48,7 @@ class AGVPoint3D(object):
 
         elif not isinstance(obj, dict):
             raise TypeError(
-                f"{type(obj)} is not in ('str', 'dict', 'AGVPoint3D')"
+                f"{type(obj)} is not in ('str', 'dict', 'Quaternion')"
             )
 
         self.set_x(obj.get('x', None))
@@ -51,6 +56,8 @@ class AGVPoint3D(object):
         self.set_y(obj.get('y', None))
 
         self.set_z(obj.get('z', None))
+
+        self.set_w(obj.get('w', None))
 
     def dict(self):
         return todict(self)
@@ -87,6 +94,17 @@ class AGVPoint3D(object):
     def get_z(self) -> float:
 
         return self.z
+
+    def set_w(self, value: float) -> None:
+
+        if isinstance(value, float):
+            self.w = value
+        else:
+            raise TypeError("field 'w' should be type float")
+
+    def get_w(self) -> float:
+
+        return self.w
 
     def serialize(self) -> None:
         return json.dumps(self, default=default_json_serialize)
