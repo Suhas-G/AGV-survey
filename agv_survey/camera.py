@@ -5,13 +5,13 @@ import pyrealsense2 as rs
 
 
 class RealSenseCamera:
-    def __init__(self, simulate=False) -> None:
+    def __init__(self, simulate=False, filepath = None) -> None:
         super().__init__()
         self.pipeline = rs.pipeline()
         cfg = rs.config()
         
         if simulate:
-            cfg.enable_device_from_file("shoe.bag")
+            cfg.enable_device_from_file(filepath)
         self.profile = self.pipeline.start(cfg)
        
         self.align = rs.align(rs.stream.color)
@@ -49,4 +49,5 @@ class RealSenseCamera:
         ys = verts[:, :, 1]
         z = np.median(zs)
         return xs[center[1], center[0]], ys[center[1], center[0]],  z
+        # return xs[center[0], center[1]], ys[center[0], center[1]],  z
             
