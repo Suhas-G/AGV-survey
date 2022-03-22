@@ -9,12 +9,14 @@ from copy import deepcopy
 
 
 class MirController:
-    def __init__(self, goals: List[dict], interval = 1) -> None:
+    def __init__(self, goals: List[dict], callback = lambda : None, interval = 1) -> None:
         self.api = MirRestApi()
         self.goals = [dict(goal, **{'status': None}) for goal in goals]
         self.interval = interval
         self.is_running = False
         self.data = {'pose': None, 'state': None, 'current_goal': None}
+        self.callback = callback
+        self.done = False
         self.data_lock = threading.Lock()
         self.next_call = time()
         self.start()
@@ -68,6 +70,27 @@ class MirController:
             self._timer = threading.Timer(interval=self.interval, function=self.monitor)
             self._timer.start()
 
+
+    def monitor_mission_status(self):
+        if self.is_running:
+            if self.api.get_mission_status() == MirStatus.DONE:
+                print('Mission done')
+                self.data_lock.acquire()
+                self.done = True
+                self.data_lock.release()
+                self.stop()
+
+        if self.is_running:
+            self._timer = threading.Timer(interval=self.interval, function=self.monitor_mission_status)
+            self._timer.start()
+
+    def is_done(self):
+        self.data_lock.acquire()
+        done = self.done
+        self.data_lock.release()
+        return done
+
+
     def start(self):
         if not self.is_running:
             self.api.initialize()
@@ -75,7 +98,7 @@ class MirController:
             self.api.start()
             self.next_call += self.interval
             # self._timer = threading.Timer(self.next_call - time(), self.monitor)
-            self._timer = threading.Timer(interval=self.interval, function=self.monitor)
+            self._timer = threading.Timer(interval=self.interval, function=self.monitor_mission_status)
             self._timer.start()
             self.is_running = True
 
@@ -97,7 +120,7 @@ class MirController:
         pose = None
         self.data_lock.acquire()
         if self.is_running and self.data['pose'] is not None:
-            orientation = self.data['pose']['orientation']
+            orientation = self.data['pose']['orientation'] * np.pi / 180
             x = self.data['pose']['x']
             y = self.data['pose']['y']
             pose = np.array([
