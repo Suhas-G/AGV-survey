@@ -188,7 +188,15 @@ class DopeDetection:
             matrix_camera[0,2] = self.camera_intrinsics.ppx
             matrix_camera[1,2] = self.camera_intrinsics.ppy
             matrix_camera[2,2] = 1
+
+            # matrix_camera[0,0] = params['camera_settings']['fx']
+            # matrix_camera[1,1] = params['camera_settings']['fy']
+            # matrix_camera[0,2] = params['camera_settings']['cx']
+            # matrix_camera[1,2] = params['camera_settings']['cy']
+            # matrix_camera[2,2] = 1
             
+            # print('Camera Matrix: ', matrix_camera)
+            # print('Dimensions: ', dimensions)
 
             if "dist_coeffs" in params["camera_settings"]:
                 dist_coeffs = np.array(params["camera_settings"]['dist_coeffs'])
