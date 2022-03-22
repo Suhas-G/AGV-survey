@@ -15,8 +15,10 @@ class RealSenseCamera:
         self.profile = self.pipeline.start(cfg)
        
         self.align = rs.align(rs.stream.color)
-        depth_profile = self.profile.get_stream(rs.stream.depth) # Fetch stream profile for depth stream
-        self.intrinsic = depth_profile.as_video_stream_profile().get_intrinsics()
+        # depth_profile = self.profile.get_stream(rs.stream.depth) # Fetch stream profile for depth stream
+        # self.intrinsic = depth_profile.as_video_stream_profile().get_intrinsics()
+        rgb_profile = self.profile.get_stream(rs.stream.color) # Fetch stream profile for color stream
+        self.intrinsic = rgb_profile.as_video_stream_profile().get_intrinsics()
         self.point_cloud = rs.pointcloud()
         self.colorizer = rs.colorizer()
         self.depth_image = np.array([[]])
