@@ -153,7 +153,7 @@ def main():
                     continue
                 
                 object_position = get_object_pose(robot_pose, camera_pose, center, camera)
-                object_id = store.query_and_push(object_position)
+                object_id, _ = store.query_and_push(object_position)
                 print('Object: ', object_id, 'Position:', object_position)
 
                 if DEBUG:

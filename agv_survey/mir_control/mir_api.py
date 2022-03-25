@@ -3,7 +3,7 @@ from uuid import uuid4
 
 import requests
 
-from .config import (MIR_ACTION_TYPE, MIR_AUTHORIZATION_CODE,
+from .config import (MIR_MOVE_TO_POS_ACTION_TYPE, MIR_RELATIVE_MOVE_ACTION_TYPE, MIR_AUTHORIZATION_CODE,
                     MIR_MISSION_GROUP_ID, MIR_MISSION_NAME, MIR_ROS_HOST)
 
 
@@ -18,6 +18,7 @@ class MirStatus(Enum):
     EXECUTING = 'executing'
     SUCCEDED = 'succeded'
     DONE = 'done'
+    ABORT = 'abort'
 
 
 class MirRestApi:
@@ -34,7 +35,7 @@ class MirRestApi:
         self.mission_queue_id = None
 
     def go_to_position(self, pos_x, pos_y, orientation):
-        res = self.session.post(self.base_url + 'actions/' + MIR_ACTION_TYPE,
+        res = self.session.post(self.base_url + 'actions/' + MIR_MOVE_TO_POS_ACTION_TYPE,
                             json={
                                 'parameters': [
                                     {'id': 'x', 'value': pos_x},
@@ -76,10 +77,19 @@ class MirRestApi:
         
         print('Mission ID', mission_id)
         self.mission_id = mission_id
-        actions = list(filter(lambda action: action['action_type'] == MIR_ACTION_TYPE, 
-                        self.get_actions(mission_id)))
+        self.clear_actions()
+
+    def is_valid_action(self, action):
+        action_type = action['action_type']
+        return (action_type == MIR_MOVE_TO_POS_ACTION_TYPE) or (action_type == MIR_RELATIVE_MOVE_ACTION_TYPE)
+
+    def clear_actions(self):
+        if self.mission_id is None:
+            return
+        actions = list(filter(self.is_valid_action, 
+                        self.get_actions(self.mission_id)))
         for action in actions:
-            res = self.session.delete(self.base_url + 'missions/' + mission_id + '/actions/' 
+            res = self.session.delete(self.base_url + 'missions/' + self.mission_id + '/actions/' 
                                         + action['guid'])
             if not res.ok:
                 raise Exception('Deleting action failed:' + str(res.json()))
@@ -91,10 +101,39 @@ class MirRestApi:
             if not ok:
                 raise Exception('Adding action failed:' + str(result))
 
+    def move_to_position(self, pos_x, pos_y, orientation):
+        self.clear_actions()
+        ok, result = self.add_move_to_position_action(self.mission_id, pos_x, pos_y, orientation)
+        if not ok:
+            raise Exception('Adding move action failed:' + str(result))
+
+    def move_relative(self, x, y, orientation):
+        self.clear_actions()
+        ok, result = self.add_relative_move_action(self.mission_id, x, y, orientation)
+        if not ok:
+            raise Exception('Adding relative action failed:' + str(result))
+    
+
+    def add_relative_move_action(self, mission_id, x, y, orientation):
+        res = self.session.post(self.base_url + 'missions/' + mission_id + '/actions',
+                                json = {
+                                    'action_type': MIR_RELATIVE_MOVE_ACTION_TYPE,
+                                    'parameters': [
+                                        {'id': 'x', 'value': x},
+                                        {'id': 'y', 'value': y},
+                                        {'id': 'orientation', 'value': orientation},
+                                        {'id': 'max_linear_speed', 'value': 0.2},
+                                        {'id': 'max_angular_speed', 'value': 0.2},
+                                        {'id': 'collision_detection', 'value': True}
+                                    ],
+                                    'priority': 1
+                                })
+        return res.ok, res.json()
+
     def add_move_to_position_action(self, mission_id, pos_x, pos_y, orientation):
         res = self.session.post(self.base_url + 'missions/' + mission_id + '/actions',
                             json={
-                                'action_type': MIR_ACTION_TYPE,
+                                'action_type': MIR_MOVE_TO_POS_ACTION_TYPE,
                                 'parameters': [
                                     {'id': 'x', 'value': pos_x},
                                     {'id': 'y', 'value': pos_y},
@@ -106,9 +145,9 @@ class MirRestApi:
                             }
             )
         
-        return res.ok, res.json
+        return res.ok, res.json()
 
-    def start(self):
+    def start_mission(self):
         res = self.session.post(self.base_url + 'mission_queue', 
                                 json={'mission_id': self.mission_id})
         if res.ok:
