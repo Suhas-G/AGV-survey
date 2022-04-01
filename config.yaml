@@ -1,0 +1,37 @@
+# Comment any of these lines to prevent detection / pose estimation of that object
+weights: {
+    'Bluetoolbox': 'weights/bluebox.pth'
+}
+
+# Type of neural network architecture
+architectures: {
+    'Bluetoolbox': 'dope'
+}
+
+
+# Cuboid dimension in cm x,y,z
+dimensions: {
+    'Bluetoolbox': [ 21.9, 15.61, 33.82 ] 
+}
+
+class_ids: {
+    'Bluetoolbox': 3
+}
+
+draw_colors: {
+    'Bluetoolbox': [255, 0, 0]
+}
+
+# Config params for DOPE
+thresh_angle: 0.5
+thresh_map: 0.01
+sigma: 3
+thresh_points: 0.1
+
+
+camera_settings : {
+    "fx": 617.835,
+    "fy": 618.07765,
+    "cx": 320.722,
+    "cy": 248.19
+}
